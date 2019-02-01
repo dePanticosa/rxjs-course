@@ -6,7 +6,7 @@ import {createHttpObservable} from '../common/util';
 
 
 @Component({
-  selector: 'app-home',
+  selector: 'home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -22,13 +22,24 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit() {
-    const http$: Observable<Course[]> = createHttpObservable('/api/coures');
-    const courses$ = http$
+    const http$ = createHttpObservable('/api/courses');
+    const courses$: Observable<Course[]> = http$
       .pipe(
-        tap(() => console.log('HTTP')),
+        // catchError(err => {
+        //   console.log('error', err);
+        //   return throwError(err);
+        // }),
+        // finalize(() => {
+        //   console.log('finilize');
+        // }),
+        tap(() => console.log('HTTP executed')),
         map(res => res['payload']),
-        shareReplay()
+        shareReplay(),
+        retryWhen(errors => errors.pipe(
+          delayWhen(() => timer(2000))
+        ))
       );
+
     this.beginnerCourses$ = courses$
       .pipe(
         map(courses => courses
